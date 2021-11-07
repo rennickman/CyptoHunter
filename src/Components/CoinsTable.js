@@ -13,22 +13,12 @@ import { numberWithCommas } from './Banner/Carousel';
 
 const CoinsTable = () => {
 
-    const [coins, setCoins] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
 
-    const { currency, symbol } = CryptoState();
+    const { currency, symbol, coins, loading, fetchCoins } = CryptoState();
     const history = useHistory();
 
-
-    // Method for fetching list of coins using axios
-    const fetchCoins = async () => {
-        setLoading(true);
-        const { data } = await axios.get(CoinList(currency));
-        setCoins(data);
-        setLoading(false);
-    }
 
 
     // Fetch the list of coins evertime the currency changes
@@ -80,7 +70,7 @@ const CoinsTable = () => {
                 <Container style={{ textAlign: "center" }} >
                     {/* Header */}
                     <Typography variant="h4" style={{ margin: 18, fontFamily: "Montserrat" }} >
-                        Cryptocurrency Prices by Markey Cap
+                        Cryptocurrency Prices by Market Cap
                     </Typography>
 
                     {/* Search Input */}

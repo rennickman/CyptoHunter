@@ -4,9 +4,13 @@ import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 import Button from '@material-ui/core/Button';
 import { Avatar } from '@material-ui/core';
 import { signOut } from '@firebase/auth';
+import { AiFillDelete } from 'react-icons/ai';
+import { doc, setDoc } from '@firebase/firestore';
 
-import { auth } from '../../firebase';
+import { auth, db } from '../../firebase';
 import { CryptoState } from '../../CryptoContext';
+import { numberWithCommas } from '../Banner/Carousel';
+
 
 
 
@@ -52,6 +56,17 @@ const useStyles = makeStyles({
         alignItems: "center",
         gap: 12,
         overflowY: "scroll"
+    },
+    coin: {
+        padding: 10,
+        borderRadius: 5,
+        color: "black",
+        width: "100%",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        backgroundColor: "#EEBC1D",
+        boxShadow: "0 0 3px black"
     }
 });
 
@@ -69,7 +84,7 @@ export default function UserSidebar() {
     });
 
 
-    const { user, setAlert } = CryptoState();
+    const { user, setAlert, watchlist, coins, symbol } = CryptoState();
 
 
     // Method for opening Sidebar
@@ -89,6 +104,36 @@ export default function UserSidebar() {
         setAlert({ open: true, type: "success", message: "Logout Successful!"});
         // close the Sidebar
         toggleDrawer();
+    }
+
+
+
+    // Method for removing a coin from the watchlist
+    const removeFromWatchlist = async (coin) => {
+        // The reference to the watchlist document
+        const coinRef = doc(db, "watchlist", user.uid);
+
+        try {
+            // Filter out the item from the watchlist
+            await setDoc(coinRef, {
+                coins: watchlist.filter(item => item !== coin?.id)
+            }, { merge: true });
+
+            // Throw success alert
+            setAlert({
+                open: true,
+                message: `${coin.name} Removed from the Watchlist!`,
+                type: "success"
+            })
+
+        } catch (error) {
+            // Throw failure alert
+            setAlert({
+                open: true,
+                message: error.message,
+                type: "error"
+            })
+        }
     }
     
 
@@ -114,7 +159,7 @@ export default function UserSidebar() {
 
                             <div className={classes.profile}>
                                 {/* Sidebar Avatar */}
-                                <Avatar classname={classes.picture} src={user.photoURL} alt={user.displayName || user.email} />
+                                <Avatar className={classes.picture} src={user.photoURL} alt={user.displayName || user.email} />
 
                                 {/* Username - Display email if name not set */}
                                 <span 
@@ -126,8 +171,32 @@ export default function UserSidebar() {
                                 {/* Watch List */}
                                 <div className={classes.watchlist}>
                                     <span style={{ fontSize: 15, textShadow: "0 0 5px black" }}>
-
+                                        Watchlist
                                     </span>
+
+                                    {/* Coins */}
+                                    {coins.map(coin => {
+                                        // Map through the coins array and if watchlist includes the coin display it
+                                        if (watchlist.includes(coin.id)){
+                                            return (
+                                                <div className={classes.coin}>
+                                                    {/* Name */}
+                                                    <span>{coin.name}</span>
+
+                                                    {/* Price */}
+                                                    <span style={{ display: "flex", gap: 8 }}>
+                                                        {symbol}
+                                                        {numberWithCommas(coin.current_price.toFixed(2))}
+
+                                                        {/* Delete Icon */}
+                                                        <AiFillDelete 
+                                                            style={{ cursor: "pointer" }} fontSize= "16"
+                                                            onClick={() => removeFromWatchlist(coin)}
+                                                        />
+                                                    </span>
+                                                </div>
+                                            )}
+                                    })}
                                 </div>
                             </div>
 
